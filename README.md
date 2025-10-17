@@ -1,10 +1,10 @@
-# IntelliFinder V4
+# Boiler plate
 
 A modular, location-aware task and documentation platform built with Go microservices architecture, designed to be scalable, secure, and adaptable to enterprise requirements.
 
 ## 🎯 Architecture Overview
 
-IntelliFinder V4 follows a microservices-first approach with the following key principles:
+Boiletplate follows a microservices-first approach with the following key principles:
 
 - **Microservices Architecture**: Each functional domain is a separate, independently deployable service
 - **Test-Driven Development**: Comprehensive unit/integration testing for all services
@@ -15,7 +15,7 @@ IntelliFinder V4 follows a microservices-first approach with the following key p
 ## 🏗️ Project Structure
 
 ```
-intellifinder/v4/
+Boilerplate/
 ├── contracts/                  # API contracts & proto files
 │   ├── proto/                  # gRPC service definitions
 │   │   ├── auth/               # Authentication service contracts
@@ -129,7 +129,7 @@ intellifinder/v4/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd intellifinder/v4
+   cd Boilerplate
    ```
 
 2. **Start all services**
@@ -143,8 +143,8 @@ intellifinder/v4/
    - Grafana: http://localhost:3000 (admin/admin)
    - Prometheus: http://localhost:9090
    - Jaeger: http://localhost:16686
-   - Keycloak Admin: http://keycloak.intellifinder.local (admin/admin)
-   - RabbitMQ Management: http://rabbitmq.intellifinder.local (intellifinder/intellifinder)
+   - Keycloak Admin: http://keycloak.boilerplate.local (admin/admin)
+   - RabbitMQ Management: http://rabbitmq.boilerplate.local (boilerplate/boilerplate)
 
 #### Option 2: Minikube (Production Parity)
 1. **Start minikube**
@@ -160,7 +160,7 @@ intellifinder/v4/
 3. **Access services**
    ```bash
    make minikube-tunnel
-   # Then access via: http://api.intellifinder.local
+   # Then access via: http://api.boilerplate.local
    ```
 
 #### Development Commands
