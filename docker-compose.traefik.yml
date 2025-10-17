@@ -1,0 +1,136 @@
+# Docker Compose override for Traefik-based service routing
+# This file extends the base docker-compose.yml with Traefik labels
+
+version: '3.8'
+
+services:
+  # Auth Service with Traefik routing
+  auth-service:
+    build: ./services/auth
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`api.intellifinder.local`) && PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.service=auth"
+      - "traefik.http.services.auth.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth"
+      - "traefik.http.routers.auth.middlewares=auth-stripprefix"
+      # Direct service access for development
+      - "traefik.http.routers.auth-direct.rule=Host(`auth.intellifinder.local`)"
+      - "traefik.http.routers.auth-direct.service=auth"
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+      - REDIS_URL=redis://redis:6379
+      - KEYCLOAK_URL=http://keycloak:8080
+
+  # Tasks Service with Traefik routing
+  tasks-service:
+    build: ./services/tasks
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tasks.rule=Host(`api.intellifinder.local`) && PathPrefix(`/tasks`)"
+      - "traefik.http.routers.tasks.service=tasks"
+      - "traefik.http.services.tasks.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.tasks-stripprefix.stripprefix.prefixes=/tasks"
+      - "traefik.http.routers.tasks.middlewares=tasks-stripprefix"
+      # Direct service access for development
+      - "traefik.http.routers.tasks-direct.rule=Host(`tasks.intellifinder.local`)"
+      - "traefik.http.routers.tasks-direct.service=tasks"
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Collections Service with Traefik routing
+  collections-service:
+    build: ./services/collections
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.collections.rule=Host(`api.intellifinder.local`) && PathPrefix(`/collections`)"
+      - "traefik.http.routers.collections.service=collections"
+      - "traefik.http.services.collections.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.collections-stripprefix.stripprefix.prefixes=/collections"
+      - "traefik.http.routers.collections.middlewares=collections-stripprefix"
+      # Direct service access for development
+      - "traefik.http.routers.collections-direct.rule=Host(`collections.intellifinder.local`)"
+      - "traefik.http.routers.collections-direct.service=collections"
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Forms Service with Traefik routing
+  forms-service:
+    build: ./services/forms
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forms.rule=Host(`api.intellifinder.local`) && PathPrefix(`/forms`)"
+      - "traefik.http.routers.forms.service=forms"
+      - "traefik.http.services.forms.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.forms-stripprefix.stripprefix.prefixes=/forms"
+      - "traefik.http.routers.forms.middlewares=forms-stripprefix"
+      # Direct service access for development
+      - "traefik.http.routers.forms-direct.rule=Host(`forms.intellifinder.local`)"
+      - "traefik.http.routers.forms-direct.service=forms"
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Tags Service with Traefik routing
+  tags-service:
+    build: ./services/tags
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tags.rule=Host(`api.intellifinder.local`) && PathPrefix(`/tags`)"
+      - "traefik.http.routers.tags.service=tags"
+      - "traefik.http.services.tags.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.tags-stripprefix.stripprefix.prefixes=/tags"
+      - "traefik.http.routers.tags.middlewares=tags-stripprefix"
+      # Direct service access for development
+      - "traefik.http.routers.tags-direct.rule=Host(`tags.intellifinder.local`)"
+      - "traefik.http.routers.tags-direct.service=tags"
+    environment:
+      - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # API Gateway (simplified - Traefik handles routing)
+  gateway:
+    build: ./gateway
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.rule=Host(`api.intellifinder.local`)"
+      - "traefik.http.routers.gateway.service=gateway"
+      - "traefik.http.services.gateway.loadbalancer.server.port=8080"
+      # Rate limiting middleware
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=100"
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=50"
+      - "traefik.http.routers.gateway.middlewares=rate-limit"
+    environment:
+      - LOG_LEVEL=debug
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - TASKS_SERVICE_URL=http://tasks-service:8080
+      - COLLECTIONS_SERVICE_URL=http://collections-service:8080
+      - FORMS_SERVICE_URL=http://forms-service:8080
+      - TAGS_SERVICE_URL=http://tags-service:8080
+
+networks:
+  intellifinder-network:
+    external: true

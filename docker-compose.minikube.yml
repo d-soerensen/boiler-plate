@@ -1,0 +1,93 @@
+# Docker Compose override for minikube development
+# This file extends the base docker-compose.yml for Kubernetes-like development
+
+version: '3.8'
+
+services:
+  # Override services to work with minikube
+  auth-service:
+    image: intellifinder/auth:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+    networks:
+      - intellifinder-network
+
+  tasks-service:
+    image: intellifinder/tasks:latest
+    ports:
+      - "8082:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+    networks:
+      - intellifinder-network
+
+  collections-service:
+    image: intellifinder/collections:latest
+    ports:
+      - "8083:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+    networks:
+      - intellifinder-network
+
+  forms-service:
+    image: intellifinder/forms:latest
+    ports:
+      - "8084:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+    networks:
+      - intellifinder-network
+
+  tags-service:
+    image: intellifinder/tags:latest
+    ports:
+      - "8085:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+    networks:
+      - intellifinder-network
+
+  gateway:
+    image: intellifinder/gateway:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=minikube
+      - LOG_LEVEL=info
+      - AUTH_SERVICE_URL=http://auth-service:8080
+      - TASKS_SERVICE_URL=http://tasks-service:8080
+      - COLLECTIONS_SERVICE_URL=http://collections-service:8080
+      - FORMS_SERVICE_URL=http://forms-service:8080
+      - TAGS_SERVICE_URL=http://tags-service:8080
+    depends_on:
+      - auth-service
+      - tasks-service
+      - collections-service
+      - forms-service
+      - tags-service
+    networks:
+      - intellifinder-network
+
+  # Add service mesh simulation
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - gateway
+    networks:
+      - intellifinder-network
+
+networks:
+  intellifinder-network:
+    driver: bridge

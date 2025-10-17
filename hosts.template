@@ -1,0 +1,23 @@
+# IntelliFinder V4 Local Development Hosts
+# Add these entries to your /etc/hosts file for local development
+
+# API Gateway and Services
+127.0.0.1 api.intellifinder.local
+127.0.0.1 auth.intellifinder.local
+127.0.0.1 tasks.intellifinder.local
+127.0.0.1 collections.intellifinder.local
+127.0.0.1 forms.intellifinder.local
+127.0.0.1 tags.intellifinder.local
+
+# Monitoring and Infrastructure
+127.0.0.1 traefik.intellifinder.local
+127.0.0.1 grafana.intellifinder.local
+127.0.0.1 prometheus.intellifinder.local
+127.0.0.1 jaeger.intellifinder.local
+127.0.0.1 loki.intellifinder.local
+
+# Development Tools
+127.0.0.1 keycloak.intellifinder.local
+127.0.0.1 rabbitmq.intellifinder.local
+127.0.0.1 redis.intellifinder.local
+127.0.0.1 postgres.intellifinder.local
