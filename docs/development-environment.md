@@ -1,4 +1,4 @@
-# Boiler-plate Development Environment Guide
+# Boilerplate Development Environment Guide
 
 ## 🚀 Development Environment Options
 

@@ -1,10 +1,10 @@
-# Boiler-plate
+# Boilerplate
 
 A modular, location-aware task and documentation platform built with Go microservices architecture, designed to be scalable, secure, and adaptable to enterprise requirements.
 
 ## 🎯 Architecture Overview
 
-Boiler-plate follows a microservices-first approach with the following key principles:
+Boilerplate follows a microservices-first approach with the following key principles:
 
 - **Microservices Architecture**: Each functional domain is a separate, independently deployable service
 - **Test-Driven Development**: Comprehensive unit/integration testing for all services

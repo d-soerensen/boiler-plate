@@ -1,6 +1,6 @@
-# Boiler-plate Monitoring Stack
+# Boilerplate Monitoring Stack
 
-This directory contains the monitoring and observability configuration for Boiler-plate.
+This directory contains the monitoring and observability configuration for Boilerplate.
 
 ## 🏗️ Components
 

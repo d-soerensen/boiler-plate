@@ -1,4 +1,4 @@
-# Boiler-plate Port Mapping
+# Boilerplate Port Mapping
 
 ## External Ports (Host → Container)
 
