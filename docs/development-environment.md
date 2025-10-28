@@ -1,22 +1,21 @@
-# IntelliFinder V4 Development Environment Guide
+# Boiler-plate Development Environment Guide
 
 ## 🚀 Development Environment Options
 
-### Option 1: Docker Compose (Recommended for Start)
-**Best for**: Rapid development, debugging, team onboarding
+### Option 1: Docker Compose with Traefik (Default)
+**Best for**: Rapid development, debugging, team onboarding, no host file modifications
 
 ```bash
-# Start all services
-docker-compose up -d
+# Setup (one-time)
+./setup-local-dev.sh
 
-# Start specific services
-docker-compose up -d postgres redis rabbitmq keycloak prometheus grafana
+# Start all services with Traefik routing
+make dev
 
-# View logs
-docker-compose logs -f auth-service
-
-# Scale services
-docker-compose up -d --scale tasks-service=3
+# Access services via localhost
+curl http://localhost/api/health
+curl http://localhost/auth/health
+curl http://localhost/tasks/health
 ```
 
 ### Option 2: Minikube/Kind (Production Parity)
@@ -49,20 +48,21 @@ minikube service auth-service --url
 
 ## 🔧 Development Workflow
 
-### 1. Local Development (Docker Compose)
+### 1. Local Development (Default)
 ```bash
-# Start infrastructure
-make dev-infra
+# One-time setup
+./setup-local-dev.sh
 
-# Start services with hot-reload
-make dev-services
+# Start all services with Traefik routing
+make dev
 
 # Run tests
 make test
 
 # View monitoring
-open http://localhost:3000  # Grafana
-open http://localhost:9090  # Prometheus
+open http://localhost/grafana     # Grafana
+open http://localhost/prometheus  # Prometheus
+open http://localhost:8081         # Traefik Dashboard
 ```
 
 ### 2. Production Testing (Minikube)
@@ -111,7 +111,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: intellifinder/auth:latest
+        image: boilerplate/auth:latest
         ports:
         - containerPort: 8080
         env:
@@ -121,33 +121,39 @@ spec:
 
 ## 🔍 Monitoring Differences
 
-### Development
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
+### Development (Default)
+- **Grafana**: http://localhost/grafana (admin/admin)
+- **Prometheus**: http://localhost/prometheus
 - **Jaeger**: http://localhost:16686
 - **Loki**: http://localhost:3100
 - **Traefik Dashboard**: http://localhost:8081 (admin/admin)
+- **Keycloak Admin**: http://localhost/auth/admin (admin/admin)
+- **RabbitMQ Management**: http://localhost/rabbitmq (boilerplate/boilerplate)
 
 ### Production
-- **Grafana**: https://grafana.intellifinder.com
-- **Prometheus**: https://prometheus.intellifinder.com
-- **Jaeger**: https://jaeger.intellifinder.com
+- **Grafana**: https://grafana.boilerplate.com
+- **Prometheus**: https://prometheus.boilerplate.com
+- **Jaeger**: https://jaeger.boilerplate.com
 - **Loki**: Internal service discovery
 
 ## 🚀 Getting Started
 
-### Quick Start (Docker Compose)
+### Quick Start (Default)
 ```bash
 # Clone and setup
 git clone <repo>
-cd intellifinder/v4
+cd boilerplate/platform
 
-# Start everything
+# One-time setup (no root privileges needed!)
+./setup-local-dev.sh
+
+# Start all services
 make dev
 
-# Access services
-curl http://localhost:8080/health  # Gateway
-curl http://localhost:8081/health  # Auth service
+# Access services via Traefik
+curl http://localhost/api/health      # Gateway
+curl http://localhost/auth/health      # Auth service
+curl http://localhost/tasks/health    # Tasks service
 ```
 
 ### Production Testing (Minikube)
@@ -160,7 +166,7 @@ make deploy-minikube
 
 # Access via ingress
 minikube tunnel
-curl http://api.intellifinder.local/health
+curl http://api.boilerplate.local/health
 ```
 
 ## 🔄 Migration Path
@@ -235,12 +241,14 @@ curl http://api.intellifinder.local/health
 
 ## 🎯 Recommendation
 
-**Start with Docker Compose + Traefik** for these reasons:
+**Use Docker Compose with Traefik (Default)** for these reasons:
 
-1. **Faster Development**: Quick iteration and debugging
-2. **Lower Resource Usage**: Better for local machines
-3. **Easier Onboarding**: Team members can start quickly
-4. **Sufficient Testing**: Can test most functionality
+1. **No Host File Modifications**: No root privileges required
+2. **Production-like Routing**: Proper reverse proxy setup
+3. **Faster Development**: Quick iteration and debugging
+4. **Easier Onboarding**: Team members can start quickly
+5. **Service Discovery**: Automatic service registration
+6. **Advanced Middleware**: Rate limiting, CORS, authentication
 
 **Move to Minikube** when you need:
 
@@ -251,10 +259,10 @@ curl http://api.intellifinder.local/health
 
 ## 🔧 Next Steps
 
-1. **Implement Docker Compose setup** (already done!)
+1. **Docker Compose with Traefik** (already implemented!)
 2. **Add hot-reload configuration**
 3. **Create Kubernetes manifests**
 4. **Setup minikube environment**
 5. **Implement Helm charts**
 
-This hybrid approach gives you the best of both worlds: fast development with Docker Compose and production testing with Kubernetes.
+This approach gives you fast development with Traefik and production testing with Kubernetes.

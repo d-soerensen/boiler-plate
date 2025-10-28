@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Database
@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - intellifinder-network
 
   # Cache
   redis:
@@ -30,6 +32,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - intellifinder-network
 
   # Message Queue
   rabbitmq:
@@ -38,7 +42,8 @@ services:
       RABBITMQ_DEFAULT_USER: intellifinder
       RABBITMQ_DEFAULT_PASS: intellifinder
     ports:
-      - "5672:5672"  # AMQP port
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -48,13 +53,6 @@ services:
       retries: 5
     networks:
       - intellifinder-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.intellifinder.local`)"
-      - "traefik.http.routers.rabbitmq.service=rabbitmq"
-      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
-      - "traefik.http.routers.rabbitmq.middlewares=rabbitmq-auth"
-      - "traefik.http.middlewares.rabbitmq-auth.basicauth.users=intellifinder:$$2y$$10$$8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe"
 
   # Keycloak
   keycloak:
@@ -66,6 +64,12 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: intellifinder
       KC_DB_PASSWORD: intellifinder
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+    ports:
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,32 +83,33 @@ services:
       - intellifinder-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=Host(`keycloak.intellifinder.local`)"
+      - "traefik.http.routers.keycloak.rule=Host(`localhost`) && PathPrefix(`/auth`)"
       - "traefik.http.routers.keycloak.service=keycloak"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
-      - "traefik.http.routers.keycloak.middlewares=cors"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=http://localhost:3000,http://localhost:4200"
+      - "traefik.http.routers.keycloak.middlewares=keycloak-stripprefix"
+      - "traefik.http.middlewares.keycloak-stripprefix.stripprefix.prefixes=/auth"
 
   # Prometheus
   prometheus:
     image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
     volumes:
       - ./ops/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+      - "--web.external-url=http://localhost/prometheus/"
+      - "--web.route-prefix=/prometheus/"
     networks:
       - intellifinder-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.intellifinder.local`)"
-      - "traefik.http.routers.prometheus.service=prometheus"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.enable=false"
 
   # Traefik API Gateway
   traefik:
@@ -118,16 +123,18 @@ services:
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.grpc.address=:8082"
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.addEntryPointsLabels=true"
       - "--metrics.prometheus.addServicesLabels=true"
       - "--metrics.prometheus.addRoutersLabels=true"
-      - "--log.level=INFO"
+      - "--log.level=DEBUG"
       - "--accesslog=true"
     ports:
       - "80:80"
       - "443:443"
-      - "8081:8080"  # Traefik dashboard
+      - "8082:8082" # gRPC services
+      - "8081:8080" # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./gateway/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
@@ -135,10 +142,10 @@ services:
       - intellifinder-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.intellifinder.local`)"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`localhost`) && PathPrefix(`/traefik`)"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$10$$8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe"  # admin:admin
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$10$$8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe8K1p/a0dL2Lz0bSjK/5eOe" # admin:admin
 
   # Grafana
   grafana:
@@ -146,6 +153,8 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_SERVER_ROOT_URL: http://localhost/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
     volumes:
       - grafana_data:/var/lib/grafana
       - ./ops/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
@@ -156,7 +165,7 @@ services:
       - intellifinder-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.intellifinder.local`)"
+      - "traefik.http.routers.grafana.rule=Host(`localhost`) && PathPrefix(`/grafana`)"
       - "traefik.http.routers.grafana.service=grafana"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
@@ -168,6 +177,8 @@ services:
     volumes:
       - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - intellifinder-network
 
   # Jaeger for distributed tracing
   jaeger:
@@ -177,6 +188,151 @@ services:
       - "14268:14268"
     environment:
       COLLECTOR_OTLP_ENABLED: true
+      QUERY_BASE_PATH: /jaeger
+    networks:
+      - intellifinder-network
+
+  # Application Services (uncomment when Dockerfiles are created)
+  # Auth Service
+  # auth-service:
+  #   build: ./services/auth
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.auth-direct.rule=Host(`localhost`) && PathPrefix(`/auth`)"
+  #     - "traefik.http.routers.auth-direct.service=auth"
+  #     - "traefik.http.services.auth.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth"
+  #     - "traefik.http.routers.auth-direct.middlewares=auth-stripprefix"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+  #     - REDIS_URL=redis://redis:6379
+  #     - KEYCLOAK_URL=http://keycloak:8080
+
+  # Tasks Service
+  # tasks-service:
+  #   build: ./services/tasks
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.tasks-direct.rule=Host(`localhost`) && PathPrefix(`/tasks`)"
+  #     - "traefik.http.routers.tasks-direct.service=tasks"
+  #     - "traefik.http.services.tasks.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.tasks-stripprefix.stripprefix.prefixes=/tasks"
+  #     - "traefik.http.routers.tasks-direct.middlewares=tasks-stripprefix"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+  #     - REDIS_URL=redis://redis:6379
+  #     - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Collections Service
+  # collections-service:
+  #   build: ./services/collections
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.collections-direct.rule=Host(`localhost`) && PathPrefix(`/collections`)"
+  #     - "traefik.http.routers.collections-direct.service=collections"
+  #     - "traefik.http.services.collections.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.collections-stripprefix.stripprefix.prefixes=/collections"
+  #     - "traefik.http.routers.collections-direct.middlewares=collections-stripprefix"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+  #     - REDIS_URL=redis://redis:6379
+  #     - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Forms Service
+  # forms-service:
+  #   build: ./services/forms
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.forms-direct.rule=Host(`localhost`) && PathPrefix(`/forms`)"
+  #     - "traefik.http.routers.forms-direct.service=forms"
+  #     - "traefik.http.services.forms.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.forms-stripprefix.stripprefix.prefixes=/forms"
+  #     - "traefik.http.routers.forms-direct.middlewares=forms-stripprefix"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+  #     - REDIS_URL=redis://redis:6379
+  #     - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Tags Service
+  # tags-service:
+  #   build: ./services/tags
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.tags-direct.rule=Host(`localhost`) && PathPrefix(`/tags`)"
+  #     - "traefik.http.routers.tags-direct.service=tags"
+  #     - "traefik.http.services.tags.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.tags-stripprefix.stripprefix.prefixes=/tags"
+  #     - "traefik.http.routers.tags-direct.middlewares=tags-stripprefix"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder
+  #     - REDIS_URL=redis://redis:6379
+  #     - AUTH_SERVICE_URL=http://auth-service:8080
+
+  # Permissions Service
+  permissions-service:
+    build:
+      context: .
+      dockerfile: ./services/permissions/Dockerfile
+    networks:
+      - intellifinder-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.permissions-grpc.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.permissions-grpc.entrypoints=grpc"
+      - "traefik.tcp.services.permissions-grpc.loadbalancer.server.port=8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://intellifinder:intellifinder@postgres:5432/intellifinder?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # gRPC UI for testing
+  grpcui:
+    image: fullstorydev/grpcui:latest
+    command: ["-plaintext", "permissions-service:8080"]
+    ports:
+      - "8083:8080"
+    networks:
+      - intellifinder-network
+    depends_on:
+      - permissions-service
+
+  # API Gateway
+  # gateway:
+  #   build: ./gateway
+  #   networks:
+  #     - intellifinder-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.gateway.rule=Host(`localhost`) && PathPrefix(`/api`)"
+  #     - "traefik.http.routers.gateway.service=gateway"
+  #     - "traefik.http.services.gateway.loadbalancer.server.port=8080"
+  #     - "traefik.http.middlewares.rate-limit.ratelimit.burst=100"
+  #     - "traefik.http.middlewares.rate-limit.ratelimit.average=50"
+  #     - "traefik.http.routers.gateway.middlewares=rate-limit"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #     - AUTH_SERVICE_URL=http://auth-service:8080
+  #     - TASKS_SERVICE_URL=http://tasks-service:8080
+  #     - COLLECTIONS_SERVICE_URL=http://collections-service:8080
+  #     - FORMS_SERVICE_URL=http://forms-service:8080
+  #     - TAGS_SERVICE_URL=http://tags-service:8080
 
 volumes:
   postgres_data:

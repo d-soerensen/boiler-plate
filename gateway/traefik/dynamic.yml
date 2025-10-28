@@ -70,94 +70,241 @@ http:
         prefixes:
           - "/api/v1"
 
+    # Strip prefix middleware for Prometheus
+    prometheus-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/prometheus"
+
+    # Strip prefix middleware for Keycloak
+    keycloak-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/auth"
+
+    # Strip prefix middleware for Keycloak Admin
+    keycloak-admin-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/auth/admin"
+
+    # Strip prefix middleware for Jaeger
+    jaeger-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/jaeger"
+
   routers:
-    # API Gateway router
-    api-gateway:
-      rule: "Host(`api.intellifinder.local`)"
-      service: "gateway"
+    # Infrastructure services - direct routing
+    prometheus-router:
+      rule: "Host(`localhost`) && PathPrefix(`/prometheus`)"
+      service: "prometheus-service"
       middlewares:
         - "cors"
-        - "rate-limit"
         - "security-headers"
-        - "retry"
-        - "circuit-breaker"
 
-    # Auth service router
-    auth-service:
-      rule: "Host(`api.intellifinder.local`) && PathPrefix(`/auth`)"
-      service: "auth-service"
+    grafana-router:
+      rule: "Host(`localhost`) && PathPrefix(`/grafana`)"
+      service: "grafana-service"
       middlewares:
         - "cors"
         - "security-headers"
-        - "strip-api-prefix"
 
-    # Tasks service router
-    tasks-service:
-      rule: "Host(`api.intellifinder.local`) && PathPrefix(`/tasks`)"
-      service: "tasks-service"
+    keycloak-router:
+      rule: "Host(`localhost`) && PathPrefix(`/auth`)"
+      service: "keycloak-service"
       middlewares:
         - "cors"
-        - "auth"
         - "security-headers"
-        - "strip-api-prefix"
+        - "keycloak-stripprefix"
 
-    # Collections service router
-    collections-service:
-      rule: "Host(`api.intellifinder.local`) && PathPrefix(`/collections`)"
-      service: "collections-service"
+    keycloak-admin-router:
+      rule: "Host(`localhost`) && PathPrefix(`/auth/admin`)"
+      service: "keycloak-service"
       middlewares:
         - "cors"
-        - "auth"
         - "security-headers"
-        - "strip-api-prefix"
+        - "keycloak-admin-stripprefix"
 
-    # Forms service router
-    forms-service:
-      rule: "Host(`api.intellifinder.local`) && PathPrefix(`/forms`)"
-      service: "forms-service"
+    loki-router:
+      rule: "Host(`localhost`) && PathPrefix(`/loki`)"
+      service: "loki-service"
       middlewares:
         - "cors"
-        - "auth"
         - "security-headers"
-        - "strip-api-prefix"
 
-    # Tags service router
-    tags-service:
-      rule: "Host(`api.intellifinder.local`) && PathPrefix(`/tags`)"
-      service: "tags-service"
+    jaeger-router:
+      rule: "Host(`localhost`) && PathPrefix(`/jaeger`)"
+      service: "jaeger-service"
       middlewares:
         - "cors"
-        - "auth"
         - "security-headers"
-        - "strip-api-prefix"
+
+    # API Gateway router - supports both localhost and intellifinder.local
+    # Commented out until gateway service is implemented
+    # api-gateway:
+    #   rule: "Host(`api.intellifinder.local`) || Host(`localhost`)"
+    #   service: "gateway"
+    #   middlewares:
+    #     - "cors"
+    #     - "rate-limit"
+    #     - "security-headers"
+    #     - "retry"
+    #     - "circuit-breaker"
+
+    # Application service routers - commented out until services are implemented
+    # Auth service router - direct access via localhost:8082
+    # auth-service-direct:
+    #   rule: "Host(`localhost`) && PathPrefix(`/auth`)"
+    #   service: "auth-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Auth service router - via API gateway
+    # auth-service-gateway:
+    #   rule: "Host(`api.intellifinder.local`) && PathPrefix(`/auth`)"
+    #   service: "auth-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Tasks service router - direct access via localhost:8083
+    # tasks-service-direct:
+    #   rule: "Host(`localhost`) && PathPrefix(`/tasks`)"
+    #   service: "tasks-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Tasks service router - via API gateway
+    # tasks-service-gateway:
+    #   rule: "Host(`api.intellifinder.local`) && PathPrefix(`/tasks`)"
+    #   service: "tasks-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Collections service router - direct access via localhost:8084
+    # collections-service-direct:
+    #   rule: "Host(`localhost`) && PathPrefix(`/collections`)"
+    #   service: "collections-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Collections service router - via API gateway
+    # collections-service-gateway:
+    #   rule: "Host(`api.intellifinder.local`) && PathPrefix(`/collections`)"
+    #   service: "collections-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Forms service router - direct access via localhost:8085
+    # forms-service-direct:
+    #   rule: "Host(`localhost`) && PathPrefix(`/forms`)"
+    #   service: "forms-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Forms service router - via API gateway
+    # forms-service-gateway:
+    #   rule: "Host(`api.intellifinder.local`) && PathPrefix(`/forms`)"
+    #   service: "forms-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Tags service router - direct access via localhost:8086
+    # tags-service-direct:
+    #   rule: "Host(`localhost`) && PathPrefix(`/tags`)"
+    #   service: "tags-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
+
+    # Tags service router - via API gateway
+    # tags-service-gateway:
+    #   rule: "Host(`api.intellifinder.local`) && PathPrefix(`/tags`)"
+    #   service: "tags-service"
+    #   middlewares:
+    #     - "cors"
+    #     - "auth"
+    #     - "security-headers"
+    #     - "strip-api-prefix"
 
   services:
-    gateway:
+    # Infrastructure services
+    prometheus-service:
       loadBalancer:
         servers:
-          - url: "http://gateway:8080"
+          - url: "http://prometheus:9090"
 
-    auth-service:
+    grafana-service:
       loadBalancer:
         servers:
-          - url: "http://auth-service:8080"
+          - url: "http://grafana:3000"
 
-    tasks-service:
+    keycloak-service:
       loadBalancer:
         servers:
-          - url: "http://tasks-service:8080"
+          - url: "http://keycloak:8080"
 
-    collections-service:
+    loki-service:
       loadBalancer:
         servers:
-          - url: "http://collections-service:8080"
+          - url: "http://loki:3100"
 
-    forms-service:
+    jaeger-service:
       loadBalancer:
         servers:
-          - url: "http://forms-service:8080"
+          - url: "http://jaeger:16686"
 
-    tags-service:
-      loadBalancer:
-        servers:
-          - url: "http://tags-service:8080"
+    # Application services - commented out until implemented
+    # gateway:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://gateway:8080"
+
+    # auth-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://auth-service:8080"
+
+    # tasks-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://tasks-service:8080"
+
+    # collections-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://collections-service:8080"
+
+    # forms-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://forms-service:8080"
+
+    # tags-service:
+    #   loadBalancer:
+    #     servers:
+    #       - url: "http://tags-service:8080"

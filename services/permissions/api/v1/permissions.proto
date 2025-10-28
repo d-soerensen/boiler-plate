@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package permissions.v1;
+
+option go_package = "intellifinder/services/permissions/api/v1;permissionsv1";
+
+service PermissionService {
+    rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
+    rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+    rpc GetServicePermissions(GetServicePermissionsRequest) returns (GetServicePermissionsResponse);
+    rpc GetAllPermissions(GetAllPermissionsRequest) returns (GetAllPermissionsResponse);
+}
+
+message RegisterServiceRequest {
+    string service_name = 1;
+    repeated string permissions = 2;  // Format: "service:action" like "auth:read", "tasks:create"
+}
+
+message RegisterServiceResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message CheckPermissionRequest {
+    string permission = 1;  // Format: "service:action" like "auth:read"
+}
+
+message CheckPermissionResponse {
+    bool exists = 1;
+}
+
+message GetServicePermissionsRequest {
+    string service_name = 1;  // Just the service name like "auth"
+    int32 page = 2;
+    int32 limit = 3;
+}
+
+message GetServicePermissionsResponse {
+    repeated string permissions = 1;  // Format: "service:action" like "auth:read", "auth:write"
+    int32 page = 2;
+    int32 limit = 3;
+    int32 total_count = 4;
+    int32 last_page = 5;
+}
+
+message GetAllPermissionsRequest {
+    int32 page = 1;
+    int32 limit = 2;
+}
+
+message GetAllPermissionsResponse {
+    repeated string permissions = 1;  // Format: "service:action" like "auth:read", "tasks:create"
+    int32 page = 2;
+    int32 limit = 3;
+    int32 total_count = 4;
+    int32 last_page = 5;
+}

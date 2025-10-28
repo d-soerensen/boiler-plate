@@ -1,10 +1,10 @@
-# Boiler plate
+# Boiler-plate
 
 A modular, location-aware task and documentation platform built with Go microservices architecture, designed to be scalable, secure, and adaptable to enterprise requirements.
 
 ## 🎯 Architecture Overview
 
-Boiletplate follows a microservices-first approach with the following key principles:
+Boiler-plate follows a microservices-first approach with the following key principles:
 
 - **Microservices Architecture**: Each functional domain is a separate, independently deployable service
 - **Test-Driven Development**: Comprehensive unit/integration testing for all services
@@ -15,7 +15,7 @@ Boiletplate follows a microservices-first approach with the following key princi
 ## 🏗️ Project Structure
 
 ```
-Boilerplate/
+boilerplate/
 ├── contracts/                  # API contracts & proto files
 │   ├── proto/                  # gRPC service definitions
 │   │   ├── auth/               # Authentication service contracts
@@ -129,7 +129,7 @@ Boilerplate/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd Boilerplate
+   cd boilerplate
    ```
 
 2. **Start all services**

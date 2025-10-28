@@ -1,6 +1,6 @@
-# IntelliFinder V4 Monitoring Stack
+# Boiler-plate Monitoring Stack
 
-This directory contains the monitoring and observability configuration for IntelliFinder V4.
+This directory contains the monitoring and observability configuration for Boiler-plate.
 
 ## 🏗️ Components
 
@@ -115,7 +115,7 @@ Services should instrument with OpenTelemetry:
 
 ```go
 // HTTP middleware
-tracer := otel.Tracer("intellifinder/auth")
+tracer := otel.Tracer("boilerplate/auth")
 span := tracer.Start(ctx, "auth.validate_token")
 defer span.End()
 

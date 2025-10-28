@@ -1,4 +1,4 @@
-# IntelliFinder V4 Port Mapping
+# Boiler-plate Port Mapping
 
 ## External Ports (Host → Container)
 
@@ -38,13 +38,13 @@ All services communicate internally using container names and internal ports:
 ## Development Access
 
 ### Via Traefik (Recommended)
-- **API Gateway**: http://api.intellifinder.local
+- **API Gateway**: http://api.boilerplate.local
 - **Traefik Dashboard**: http://localhost:8081 (admin/admin)
-- **Grafana**: http://grafana.intellifinder.local (admin/admin)
-- **Prometheus**: http://prometheus.intellifinder.local
-- **Jaeger**: http://jaeger.intellifinder.local
-- **Keycloak Admin**: http://keycloak.intellifinder.local (admin/admin)
-- **RabbitMQ Management**: http://rabbitmq.intellifinder.local (intellifinder/intellifinder)
+- **Grafana**: http://grafana.boilerplate.local (admin/admin)
+- **Prometheus**: http://prometheus.boilerplate.local
+- **Jaeger**: http://jaeger.boilerplate.local
+- **Keycloak Admin**: http://keycloak.boilerplate.local (admin/admin)
+- **RabbitMQ Management**: http://rabbitmq.boilerplate.local (boilerplate/boilerplate)
 
 ### Direct Port Access (Fallback)
 - **Grafana**: http://localhost:3000 (admin/admin)
